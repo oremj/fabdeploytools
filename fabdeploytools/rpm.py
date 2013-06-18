@@ -18,7 +18,7 @@ class RPMBuild:
         self.ref = ref
 
         self.package_prefix = 'deploy-%s-%s' % (self.name, self.env)
-        self.package_name = '%s-%s-%s' % (self.package_prefix, self.env,
+        self.package_name = '%s-%s-%s' % (self.package_prefix,
                                           self.build_id, self.ref)
         self.package_filename = os.path.join('/tmp',
                                              '%s.rpm' % self.package_name)
