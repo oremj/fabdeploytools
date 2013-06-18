@@ -48,11 +48,11 @@ class RPMBuild:
 
     def install_package(self):
         """installs package on remote hosts. roles or hosts must be set"""
-        cur_sym = os.path.join(self.install_to, 'current')
+        cur_sym = os.path.join(self.install_dir, 'current')
 
         put(self.package_filename, self.package_filename)
         run('rpm -i %s' % self.package_filename)
-        run('ln -sfn {0} {1}'.format(self.install_dir, cur_sym))
+        run('ln -sfn {0} {1}'.format(self.install_to, cur_sym))
         run('rm -f %s' % self.package_filename)
 
         self.cleanup_packages()
