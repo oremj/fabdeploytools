@@ -33,7 +33,7 @@ class RPMBuild:
         self.package_filename = os.path.join('/tmp',
                                              '%s.rpm' % full_name)
 
-        self.install_to = os.path.join(install_dir, full_name)
+        self.install_to = os.path.join(self.install_dir, full_name)
 
     def build_rpm(self, project_dir, package_dirs=None):
         """Builds an rpm and returns the filename:
