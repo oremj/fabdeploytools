@@ -16,7 +16,7 @@ class RPMBuild:
         self.name = name
         self.env = env
         self.build_id = build_id
-        self.ref = ref
+        self.ref = ref[:10]
         self.install_dir = install_dir
 
         self.package_name = 'deploy-%s-%s' % (self.name, self.env)
