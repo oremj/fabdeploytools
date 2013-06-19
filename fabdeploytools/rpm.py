@@ -20,12 +20,11 @@ class RPMBuild:
         self.install_dir = install_dir
 
         self.package_name = 'deploy-%s-%s' % (self.name, self.env)
+        full_name = 'deploy-{0.name}-{0.env}-{0.build_id}-{0.ref}'.format(self)
         self.package_filename = os.path.join('/tmp',
-                                             '%s.rpm' % self.package_name)
+                                             '%s.rpm' % full_name)
 
-        self.install_to = os.path.join(install_dir,
-                                       '{0.package_name}'
-                                       '-{0.build_id}-{0.ref}'.format(self))
+        self.install_to = os.path.join(install_dir, full_name)
 
     def build_rpm(self, project_dir, package_dirs=None):
         """Builds an rpm and returns the filename:
