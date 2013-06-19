@@ -38,15 +38,15 @@ class RPMBuild:
         after_install = NamedTemporaryFile()
         after_install.write('ln -sfn {0} {1}'.format(self.install_to, cur_sym))
 
-        local('fpm -s dir -t rpm -n "{0}.package_name" '
+        local('fpm -s dir -t rpm -n "{0.package_name}" '
               '--rpm-compression none '
-              '-p "{0}.package_filename" '
-              '-v "{0}.build_id" '
-              '--iteration "{0}.ref" '
+              '-p "{0.package_filename}" '
+              '-v "{0.build_id}" '
+              '--iteration "{0.ref}" '
               '--after-install "{3}" '
               '--directories / '
               '-x "*.git" -x "*.svn" -x "*.pyc" '
-              '-C {1} --prefix "{0}.install_to" '
+              '-C {1} --prefix "{0.install_to}" '
               '{2}'.format(self,
                            project_dir,
                            ' '.join(package_dirs),
