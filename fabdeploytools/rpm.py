@@ -60,7 +60,7 @@ class RPMBuild:
         """installs package on remote hosts. roles or hosts must be set"""
 
         put(self.package_filename, self.package_filename)
-        run('rpm -i --force %s' % self.package_filename)
+        run('rpm -i %s' % self.package_filename)
         run('rm -f %s' % self.package_filename)
 
         self.cleanup_packages()
