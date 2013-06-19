@@ -5,19 +5,28 @@ from fabric.api import local, run, put
 
 
 class RPMBuild:
-    def __init__(self, name, env, ref, build_id, install_dir):
+    def __init__(self, name, env, ref, build_id,
+                 install_dir=None, cluster=None, domain=None):
         """
         name: codename of project e.g. "zamboni"
         env: prod, stage, dev, etc
         build_id: typically a unix timestamp
         ref: git ref of project to be packaged
         install_dir: where package will be installed
+        cluster, domain: if cluster and domain are present install_dir will
+                         be constructed
         """
         self.name = name
         self.env = env
         self.build_id = build_id
         self.ref = ref[:10]
-        self.install_dir = install_dir
+        if install_dir:
+            self.install_dir = install_dir
+        elif cluster and domain:
+            self.install_dir = os.path.join('/data', cluster, 'www', domain)
+        else:
+            raise Exception('Either install_dir or cluster '
+                            'and domain must be defined')
 
         self.package_name = 'deploy-%s-%s' % (self.name, self.env)
         full_name = 'deploy-{0.name}-{0.env}-{0.build_id}-{0.ref}'.format(self)
