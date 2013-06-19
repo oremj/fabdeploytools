@@ -23,7 +23,9 @@ class RPMBuild:
         self.package_filename = os.path.join('/tmp',
                                              '%s.rpm' % self.package_name)
 
-        self.install_to = os.path.join(install_dir, self.package_name)
+        self.install_to = os.path.join(install_dir,
+                                       '{0.package_name}'
+                                       '-{0.build_id}-{0.ref}'.format(self))
 
     def build_rpm(self, project_dir, package_dirs=None):
         """Builds an rpm and returns the filename:
@@ -35,8 +37,9 @@ class RPMBuild:
 
         cur_sym = os.path.join(self.install_dir, 'current')
 
-        after_install = NamedTemporaryFile()
+        after_install = NamedTemporaryFile(delete=False)
         after_install.write('ln -sfn {0} {1}'.format(self.install_to, cur_sym))
+        after_install.close()
 
         local('fpm -s dir -t rpm -n "{0.package_name}" '
               '--rpm-compression none '
@@ -52,7 +55,7 @@ class RPMBuild:
                            ' '.join(package_dirs),
                            after_install.name))
 
-        after_install.close()
+        os.unlink(after_install.name)
 
     def install_package(self):
         """installs package on remote hosts. roles or hosts must be set"""
