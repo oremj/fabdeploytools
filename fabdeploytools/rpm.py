@@ -1,4 +1,5 @@
 import os
+from tempfile import NamedTemporaryFile
 
 from fabric.api import local, run, put
 
@@ -18,9 +19,7 @@ class RPMBuild:
         self.ref = ref
         self.install_dir = install_dir
 
-        self.package_prefix = 'deploy-%s-%s' % (self.name, self.env)
-        self.package_name = '%s-%s-%s' % (self.package_prefix,
-                                          self.build_id, self.ref)
+        self.package_name = 'deploy-%s-%s' % (self.name, self.env)
         self.package_filename = os.path.join('/tmp',
                                              '%s.rpm' % self.package_name)
 
@@ -34,31 +33,38 @@ class RPMBuild:
         if not package_dirs:
             package_dirs = ['.']
 
-        local('fpm -s dir -t rpm -n "%s" '
+        cur_sym = os.path.join(self.install_dir, 'current')
+
+        after_install = NamedTemporaryFile()
+        after_install.write('ln -sfn {0} {1}'.format(self.install_to, cur_sym))
+
+        local('fpm -s dir -t rpm -n "{0}.package_name" '
               '--rpm-compression none '
-              '-p "%s" '
+              '-p "{0}.package_filename" '
+              '-v "{0}.build_id" '
+              '--iteration "{0}.ref" '
+              '--after-install "{3}" '
               '--directories / '
               '-x "*.git" -x "*.svn" -x "*.pyc" '
-              '-C %s --prefix "%s" '
-              '%s' % (self.package_name,
-                      self.package_filename,
-                      project_dir,
-                      self.install_to,
-                      ' '.join(package_dirs)))
+              '-C {1} --prefix "{0}.install_to" '
+              '{2}'.format(self,
+                           project_dir,
+                           ' '.join(package_dirs),
+                           after_install.name))
+
+        after_install.close()
 
     def install_package(self):
         """installs package on remote hosts. roles or hosts must be set"""
-        cur_sym = os.path.join(self.install_dir, 'current')
 
         put(self.package_filename, self.package_filename)
-        run('rpm -i %s' % self.package_filename)
-        run('ln -sfn {0} {1}'.format(self.install_to, cur_sym))
+        run('rpm -i --force %s' % self.package_filename)
         run('rm -f %s' % self.package_filename)
 
         self.cleanup_packages()
 
     def cleanup_packages(self, keep=4):
-        installed = run('rpm -qa {0}-*'.format(self.package_prefix)).split()
+        installed = run('rpm -q {0}'.format(self.package_name)).split()
         installed.sort()
 
         for i in installed[:-keep]:
