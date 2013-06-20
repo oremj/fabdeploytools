@@ -7,5 +7,6 @@ setup(
     description='Deploy tools for fabric',
     author='Jeremy Orem',
     author_email='oremj@mozilla.com',
-    packages=['fabdeploytools']
+    packages=['fabdeploytools'],
+    scripts=['scripts/clusterrun']
 )

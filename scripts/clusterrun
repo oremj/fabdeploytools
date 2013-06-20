@@ -1,0 +1,35 @@
+#!/usr/bin/python
+
+import os
+import sys
+
+import argparse
+
+from fabdeploytools import envs
+from fabric.api import env, execute, parallel, task, roles, run
+
+parser = argparse.ArgumentParser(description='Run commands on a cluster')
+parser.add_argument('cluster', nargs=1)
+parser.add_argument('hosttype', nargs='?')
+parser.add_argument('cmd', nargs='*')
+parser.add_argument('-p', '--poolsize', default=30, type=int)
+parser.add_argument('-l', '--listhosttypes', action='store_true')
+
+args = parser.parse_args()
+
+envs.loadenv(os.path.join('/etc/deploytools/envs', args.cluster[0]))
+
+
+if args.listhosttypes:
+    for k, v in env.roledefs.iteritems():
+        print "%s: %s" % (k, ','.join(v))
+    sys.exit()
+
+
+@task
+@parallel(pool_size=args.poolsize)
+@roles(args.hosttype)
+def runit(cmd):
+    run(cmd)
+
+execute(runit, ' '.join(args.cmd))
