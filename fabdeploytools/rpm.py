@@ -1,11 +1,12 @@
 import os
+import time
 from tempfile import NamedTemporaryFile
 
 from fabric.api import local, run, put
 
 
 class RPMBuild:
-    def __init__(self, name, env, ref, build_id,
+    def __init__(self, name, env, ref, build_id=None,
                  install_dir=None, cluster=None, domain=None):
         """
         name: codename of project e.g. "zamboni"
@@ -18,7 +19,7 @@ class RPMBuild:
         """
         self.name = name
         self.env = env
-        self.build_id = build_id
+        self.build_id = build_id if build_id else str(int(time.time()))
         self.ref = ref[:10]
         if install_dir:
             self.install_dir = install_dir
