@@ -110,8 +110,8 @@ class RPMBuild:
         prev_sym = os.path.join(self.http_root, 'PREVIOUS')
         package = os.path.join(self.http_root, os.path.basename(rpm))
 
+        local('mkdir -p %s' % self.http_root)
         with lcd(self.http_root):
-            local('mkdir -p %s' % self.http_root)
             local('cp {0} {1}'.format(rpm, package))
             local('[[ -h {0} ]] && '
                   'ln -snf $(readlink {0}) {1}'.format(latest_sym, prev_sym))
