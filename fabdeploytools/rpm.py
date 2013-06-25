@@ -113,6 +113,7 @@ class RPMBuild:
         local('mkdir -p %s' % self.http_root)
         with lcd(self.http_root):
             local('cp {0} {1}'.format(rpm, package))
-            local('[[ -h {0} ]] && '
-                  'ln -snf $(readlink {0}) {1}'.format(latest_sym, prev_sym))
+            if os.path.islink(latest_sym):
+                local('ln -snf $(readlink {0}) {1}'.format(latest_sym,
+                                                           prev_sym))
             local('ln -snf {0} {1}'.format(package, latest_sym))
