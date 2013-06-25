@@ -22,12 +22,17 @@ def git_info(src_dir):
 
 
 @task
-def create_venv(venv, pyrepo, requirements):
-    """venv: directory where venv should be placed"""
-    local('virtualenv --distribute --never-download %s' % venv)
+def pip_install_reqs(venv, pyrepo, requirements):
     local('%s/bin/pip install --exists-action=w --no-deps --no-index '
           '--download-cache=/tmp/pip-cache -f %s '
           '-r %s' % (venv, pyrepo, requirements))
+
+
+@task
+def create_venv(venv, pyrepo, requirements):
+    """venv: directory where venv should be placed"""
+    local('virtualenv --distribute --never-download %s' % venv)
+    pip_install_reqs(venv, pyrepo, requirements)
     local('rm -f %s/lib/python2.6/no-global-site-packages.txt' % venv)
     local('{0}/bin/python /usr/bin/virtualenv '
           '--relocatable {0}'.format(venv))
