@@ -1,5 +1,5 @@
 import os
-import time
+from datetime import datetime
 from tempfile import NamedTemporaryFile
 
 from fabric.api import lcd, local, run, put
@@ -12,7 +12,7 @@ class RPMBuild:
         """
         name: codename of project e.g. "zamboni"
         env: prod, stage, dev, etc
-        build_id: typically a unix timestamp
+        build_id: typically a timestamp
         ref: git ref of project to be packaged
         install_dir: where package will be installed
         cluster, domain: if cluster and domain are present install_dir will
@@ -22,7 +22,11 @@ class RPMBuild:
         """
         self.name = name
         self.env = env
-        self.build_id = build_id if build_id else str(int(time.time()))
+
+        if not build_id:
+            build_id = datetime.now().strftime('%Y%m%d%H%M%S')
+        self.build_id = build_id
+
         self.ref = ref[:10]
         if install_dir:
             self.install_dir = install_dir
