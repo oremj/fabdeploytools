@@ -30,6 +30,6 @@ if args.listhosttypes:
 @parallel(pool_size=args.poolsize)
 @roles(args.hosttype)
 def runit(cmd):
-    run(cmd)
+    run(cmd, warn_only=True)
 
 execute(runit, ' '.join(args.cmd))
