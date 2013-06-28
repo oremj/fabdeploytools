@@ -9,11 +9,11 @@ from fabdeploytools import envs
 from fabric.api import env, execute, parallel, task, roles, run
 
 parser = argparse.ArgumentParser(description='Run commands on a cluster')
-parser.add_argument('cluster', nargs=1)
-parser.add_argument('hosttype', nargs='?')
-parser.add_argument('cmd', nargs='*')
 parser.add_argument('-p', '--poolsize', default=30, type=int)
 parser.add_argument('-l', '--listhosttypes', action='store_true')
+parser.add_argument('cluster', nargs=1)
+parser.add_argument('hosttype', nargs='?')
+parser.add_argument('cmd', nargs=argparse.REMAINDER)
 
 args = parser.parse_args()
 
