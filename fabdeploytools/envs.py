@@ -7,14 +7,17 @@ from fabric import api
 def expand_hosts(hosts):
     new_hosts = []
     for host in hosts:
-        m = re.search('(.*)\[(\d+):(\d+)\](.*)', host)
+        m = re.search('(.*)\[(\d+):(\d+)(![\d,]+)?\](.*)', host)
         if m:
             lower = int(m.group(2))
             upper = int(m.group(3))
-            head, tail = m.group(1, 4)
+            negate = [int(x) for x in m.group(4)[1:].split(',')
+                      if x.isdigit()] if m.group(4) else []
+            head, tail = m.group(1, 5)
             if lower < upper:
                 for j in range(lower, upper + 1):
-                    new_hosts.append("{0}{1}{2}".format(head, j, tail))
+                    if j not in negate:
+                        new_hosts.append("{0}{1}{2}".format(head, j, tail))
         else:
             new_hosts.append(host)
 
