@@ -2,7 +2,8 @@ import os
 from datetime import datetime
 from tempfile import NamedTemporaryFile
 
-from fabric.api import lcd, local, run, put
+from fabric.api import (execute, lcd, local, roles, run,
+                        parallel, put, task)
 
 
 class RPMBuild:
@@ -77,6 +78,15 @@ class RPMBuild:
                            after_install.name))
 
         os.unlink(after_install.name)
+
+    def deploy(self, *role_list):
+        @task
+        @roles(*role_list)
+        @parallel
+        def install():
+            self.install_package()
+
+        execute(install)
 
     def install_package(self):
         """installs package on remote hosts. roles or hosts must be set"""
