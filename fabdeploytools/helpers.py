@@ -36,3 +36,9 @@ def create_venv(venv, pyrepo, requirements):
     local('rm -f %s/lib/python2.6/no-global-site-packages.txt' % venv)
     local('{0}/bin/python /usr/bin/virtualenv '
           '--relocatable {0}'.format(venv))
+
+
+def git_ref(app):
+    """app: location of app. Returns currently installed ref"""
+    with lcd(app):
+        return local('git rev-parse HEAD', capture=True)
