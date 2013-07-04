@@ -1,4 +1,5 @@
 import json
+import os
 import re
 
 from fabric import api
@@ -25,6 +26,9 @@ def expand_hosts(hosts):
 
 
 def loadenv(f):
+    """If f does not point to a file, it will look in /etc/deploytools/envs"""
+    if not os.path.isfile(f):
+        f = os.path.join('/etc/deploytools/envs', f)
     roles = json.load(open(f))
     for role, hosts in roles.iteritems():
         roles[role] = expand_hosts(hosts)
