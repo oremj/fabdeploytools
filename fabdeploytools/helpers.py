@@ -47,13 +47,16 @@ def git_ref(app):
         return local('git rev-parse HEAD', capture=True)
 
 
-def deploy(name, env, cluster, domain, root, app_dir,
+def deploy(name, env, cluster, domain, root, app_dir=None,
            deploy_roles='web', package_dirs=None):
     """
     root: package root, e.g., '/data/www/www.test.com'
-    app_dir: relative to root e.g., 'testapp'
+    app_dir: relative to root e.g., 'testapp', defaults to "name"
     package_dirs: relative to root, which dirs to include in the package.
     """
+
+    if app_dir is None:
+        app_dir = name
 
     if package_dirs is None:
         package_dirs = [app_dir]
