@@ -47,6 +47,17 @@ def git_ref(app):
         return local('git rev-parse HEAD', capture=True)
 
 
+def get_app_dirs(fabfile):
+    """If fabfile is at /tmp/domain/app_dir/fabfile.py, this will return
+       /tmp/domain, /tmp/domain/app_dir
+
+       Typically called as get_app_dirs(__file__) from fabfile.py
+    """
+    APP = os.path.dirname(os.path.abspath(fabfile))
+    ROOT = os.path.dirname(APP)
+    return ROOT, APP
+
+
 def deploy(name, env, cluster, domain, root, app_dir=None,
            deploy_roles='web', package_dirs=None):
     """
