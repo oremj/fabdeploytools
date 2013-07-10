@@ -7,6 +7,9 @@ from fabric.api import (execute, lcd, local, roles, run,
 
 
 class RPMBuild:
+
+    DEFAULT_HTTP_ROOT = '/var/deployserver/packages'
+
     def __init__(self, name, env, ref, build_id=None,
                  install_dir=None, cluster=None, domain=None,
                  http_root=None, keep_http=4):
@@ -40,8 +43,8 @@ class RPMBuild:
                             'and domain must be defined')
 
         if http_root is None:
-            if os.path.isdir('/var/deployserver/packages'):  # default location
-                http_root = http_root
+            if os.path.isdir(RPMBuild.DEFAULT_HTTP_ROOT):  # default location
+                http_root = RPMBuild.DEFAULT_HTTP_ROOT
 
         if cluster and domain and http_root:
             self.http_root = os.path.join(http_root, cluster, domain)
