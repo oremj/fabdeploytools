@@ -77,3 +77,4 @@ def deploy(name, env, cluster, domain, root, app_dir=None,
     r.build_rpm(root, package_dirs)
     r.deploy(deploy_roles)
     r.clean()
+    return r
