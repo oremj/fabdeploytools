@@ -1,4 +1,7 @@
+import os
+
 from fabric.api import lcd, local, task
+from .rpm import RPMBuild
 
 
 @task
@@ -42,3 +45,35 @@ def git_ref(app):
     """app: location of app. Returns currently installed ref"""
     with lcd(app):
         return local('git rev-parse HEAD', capture=True)
+
+
+def get_app_dirs(fabfile):
+    """If fabfile is at /tmp/domain/app_dir/fabfile.py, this will return
+       /tmp/domain, /tmp/domain/app_dir
+
+       Typically called as get_app_dirs(__file__) from fabfile.py
+    """
+    APP = os.path.dirname(os.path.abspath(fabfile))
+    ROOT = os.path.dirname(APP)
+    return ROOT, APP
+
+
+def deploy(name, env, cluster, domain, root, app_dir=None,
+           deploy_roles='web', package_dirs=None):
+    """
+    root: package root, e.g., '/data/www/www.test.com'
+    app_dir: relative to root e.g., 'testapp', defaults to "name"
+    package_dirs: relative to root, which dirs to include in the package.
+    """
+
+    if app_dir is None:
+        app_dir = name
+
+    if package_dirs is None:
+        package_dirs = [app_dir]
+
+    r = RPMBuild(name=name, env=env, cluster=cluster, domain=domain,
+                 ref=git_ref(os.path.join(root, app_dir)))
+    r.build_rpm(root, package_dirs)
+    r.deploy(deploy_roles)
+    r.clean()
