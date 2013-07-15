@@ -118,7 +118,7 @@ class RPMBuild:
         """remove is a function"""
         installed.sort()
 
-        for i in installed[:keep]:
+        for i in installed[:-keep]:
             if self.build_id not in i:
                 remove(i)
 
