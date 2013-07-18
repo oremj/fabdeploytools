@@ -81,7 +81,7 @@ def deploy(name, env, cluster, domain, root, app_dir=None,
     return r
 
 
-def restart_uwsgi(uwsgis, role_list):
+def restart_uwsgi(uwsgis, role_list='web'):
     @task
     @roles(role_list)
     @parallel
