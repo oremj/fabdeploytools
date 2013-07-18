@@ -1,6 +1,6 @@
 import os
 
-from fabric.api import lcd, local, task
+from fabric.api import execute, lcd, local, roles, parallel, run, task
 from .rpm import RPMBuild
 
 
@@ -77,3 +77,14 @@ def deploy(name, env, cluster, domain, root, app_dir=None,
     r.build_rpm(root, package_dirs)
     r.deploy(deploy_roles)
     r.clean()
+
+
+def restart_uwsgi(uwsgis, role_list):
+    @task
+    @roles(role_list)
+    @parallel
+    def restart_uwsgis():
+        for u in uwsgis:
+            run('kill -HUP $(supervisorctl pid uwsgi-%s)' % u)
+
+    execute(restart_uwsgis)
