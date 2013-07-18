@@ -98,6 +98,7 @@ class RPMBuild:
         def install():
             self.install_package()
 
+        self.local_install()
         execute(install)
 
     def install_package(self):
@@ -109,13 +110,27 @@ class RPMBuild:
 
         self.cleanup_packages()
 
-    def cleanup_packages(self, keep=4):
-        installed = run('rpm -q {0}'.format(self.package_name)).split()
+    def local_install(self):
+        local('rpm -i %s' % self.package_filename)
+        self.local_cleanup_packages()
+
+    def _clean_packages(self, installed, keep, remove):
+        """remove is a function"""
         installed.sort()
 
         for i in installed[:-keep]:
             if self.build_id not in i:
-                run('rpm -e %s' % i)
+                remove(i)
+
+    def local_cleanup_packages(self, keep=4):
+        installed = local('rpm -q {0}'.format(self.package_name),
+                          capture=True).split()
+        installed.sort()
+        self._clean_packages(installed, keep, lambda i: local('rpm -e %s' % i))
+
+    def cleanup_packages(self, keep=4):
+        installed = run('rpm -q {0}'.format(self.package_name)).split()
+        self._clean_packages(installed, keep, lambda i: run('rpm -e %s' % i))
 
     def clean(self):
         local('rm -f %s' % self.package_filename)

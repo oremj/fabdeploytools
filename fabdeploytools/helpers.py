@@ -78,6 +78,8 @@ def deploy(name, env, cluster, domain, root, app_dir=None,
     r.deploy(deploy_roles)
     r.clean()
 
+    return r
+
 
 def restart_uwsgi(uwsgis, role_list):
     @task
