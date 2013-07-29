@@ -33,8 +33,12 @@ def pip_install_reqs(venv, pyrepo, requirements):
 
 
 @task
-def create_venv(venv, pyrepo, requirements, update_on_change=False):
-    """venv: directory where venv should be placed"""
+def create_venv(venv, pyrepo, requirements, update_on_change=False,
+                rm_first=False):
+    """venv: directory where venv should be placed
+       update_on_change: only update venv if requirements have changed
+       rm_first: rm -rf the virtualenv first."""
+
     md5_file = os.path.join(venv, 'MD5SUM')
     md5sum = hashlib.md5(open(requirements).read()).hexdigest()
     if update_on_change:
@@ -45,6 +49,10 @@ def create_venv(venv, pyrepo, requirements, update_on_change=False):
                 return
         except IOError:
             pass
+
+    # only rm if venv is in the path, for safety
+    if rm_first and 'venv' in venv:
+        local('rm -rf %s' % venv)
 
     local('virtualenv --distribute --never-download %s' % venv)
     pip_install_reqs(venv, pyrepo, requirements)
