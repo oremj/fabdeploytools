@@ -1,3 +1,4 @@
+import hashlib
 import os
 
 from fabric.api import execute, lcd, local, roles, parallel, run, task
@@ -32,13 +33,28 @@ def pip_install_reqs(venv, pyrepo, requirements):
 
 
 @task
-def create_venv(venv, pyrepo, requirements):
+def create_venv(venv, pyrepo, requirements, update_on_change=False):
     """venv: directory where venv should be placed"""
+    md5_file = os.path.join(venv, 'MD5SUM')
+    md5sum = hashlib.md5(open(requirements).read()).hexdigest()
+    if update_on_change:
+        try:
+            f = open(md5_file)
+            if f.read() == md5sum:
+                print "Virtualenv is current"
+                return
+        except IOError:
+            pass
+
     local('virtualenv --distribute --never-download %s' % venv)
     pip_install_reqs(venv, pyrepo, requirements)
+
     local('rm -f %s/lib/python2.6/no-global-site-packages.txt' % venv)
     local('{0}/bin/python /usr/bin/virtualenv '
           '--relocatable {0}'.format(venv))
+
+    with open(md5_file, 'w') as f:
+        f.write(md5sum)
 
 
 def git_ref(app):
