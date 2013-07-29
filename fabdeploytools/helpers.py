@@ -34,7 +34,7 @@ def pip_install_reqs(venv, pyrepo, requirements):
 
 @task
 def create_venv(venv, pyrepo, requirements, update_on_change=False,
-                rm_first=False):
+                rm_first=True):
     """venv: directory where venv should be placed
        update_on_change: only update venv if requirements have changed
        rm_first: rm -rf the virtualenv first."""
