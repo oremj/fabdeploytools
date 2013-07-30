@@ -108,7 +108,7 @@ def deploy(name, env, cluster, domain, root, app_dir=None,
 def restart_uwsgi(uwsgis, role_list='web'):
     @task
     @roles(role_list)
-    @parallel
+    @parallel(pool_size=4)
     def restart_uwsgis():
         for u in uwsgis:
             run('kill -HUP $(supervisorctl pid uwsgi-%s)' % u)
