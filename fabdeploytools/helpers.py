@@ -72,6 +72,14 @@ def git_ref(app):
         return local('git rev-parse HEAD', capture=True)
 
 
+def git_latest_tag(app):
+    """app: location of app. Returns latest tag"""
+    with lcd(app):
+        local('git fetch')
+        local('git fetch -t')
+        return local('git describe --abbrev=0 --tags', capture=True)
+
+
 def get_app_dirs(fabfile):
     """If fabfile is at /tmp/domain/app_dir/fabfile.py, this will return
        /tmp/domain, /tmp/domain/app_dir
