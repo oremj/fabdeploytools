@@ -72,6 +72,7 @@ def git_ref(app):
         return local('git rev-parse HEAD', capture=True)
 
 
+@task
 def git_latest_tag(app):
     """app: location of app. Returns latest tag"""
     with lcd(app):
