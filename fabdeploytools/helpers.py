@@ -73,7 +73,7 @@ def git_ref(app):
 
 
 @task
-def git_latest_tag(app):
+def git_latest_tag(app=os.getcwd()):
     """app: location of app. Returns latest tag"""
     with lcd(app):
         local('git fetch')
