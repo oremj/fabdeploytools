@@ -3,14 +3,14 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile
 
 from fabric.api import (execute, lcd, local, roles, run,
-                        parallel, put, task)
+                        parallel, put, sudo, task)
 
 
 class RPMBuild:
 
     DEFAULT_HTTP_ROOT = '/var/deployserver/packages'
 
-    def __init__(self, name, env, ref, build_id=None,
+    def __init__(self, name, env, ref, build_id=None, use_sudo=False,
                  install_dir=None, cluster=None, domain=None,
                  http_root=None, keep_http=4):
         """
@@ -28,6 +28,7 @@ class RPMBuild:
         self.name = name
         self.env = env
         self.keep_http = keep_http
+        self.run = sudo if use_sudo else run
 
         if build_id is None:
             build_id = datetime.now().strftime('%Y%m%d%H%M%S')
@@ -105,8 +106,8 @@ class RPMBuild:
         """installs package on remote hosts. roles or hosts must be set"""
 
         put(self.package_filename, self.package_filename)
-        run('rpm -i %s' % self.package_filename)
-        run('rm -f %s' % self.package_filename)
+        self.run('rpm -i %s' % self.package_filename)
+        self.run('rm -f %s' % self.package_filename)
 
         self.cleanup_packages()
 
@@ -129,8 +130,9 @@ class RPMBuild:
         self._clean_packages(installed, keep, lambda i: local('rpm -e %s' % i))
 
     def cleanup_packages(self, keep=4):
-        installed = run('rpm -q {0}'.format(self.package_name)).split()
-        self._clean_packages(installed, keep, lambda i: run('rpm -e %s' % i))
+        installed = self.run('rpm -q {0}'.format(self.package_name)).split()
+        self._clean_packages(installed, keep,
+                             lambda i: self.run('rpm -e %s' % i))
 
     def clean(self):
         local('rm -f %s' % self.package_filename)

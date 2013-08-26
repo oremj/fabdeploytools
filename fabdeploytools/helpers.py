@@ -1,7 +1,7 @@
 import hashlib
 import os
 
-from fabric.api import execute, lcd, local, roles, parallel, run, task
+from fabric.api import execute, lcd, local, roles, run, task
 from .rpm import RPMBuild
 from time import sleep
 
@@ -93,7 +93,7 @@ def get_app_dirs(fabfile):
 
 
 def deploy(name, env, cluster, domain, root, app_dir=None,
-           deploy_roles='web', package_dirs=None):
+           use_sudo=False, deploy_roles='web', package_dirs=None):
     """
     root: package root, e.g., '/data/www/www.test.com'
     app_dir: relative to root e.g., 'testapp', defaults to "name"
@@ -107,6 +107,7 @@ def deploy(name, env, cluster, domain, root, app_dir=None,
         package_dirs = [app_dir]
 
     r = RPMBuild(name=name, env=env, cluster=cluster, domain=domain,
+                 use_sudo=use_sudo,
                  ref=git_ref(os.path.join(root, app_dir)))
     r.build_rpm(root, package_dirs)
     r.deploy(deploy_roles)
