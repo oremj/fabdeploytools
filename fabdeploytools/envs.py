@@ -21,7 +21,7 @@ def aws_hosts(filters):
     boto_filters = {}
     filters = filters.split(',')
     for filter_ in filters:
-        k, v = filter_.split(':')
+        k, v = filter_.split('=')
         boto_filters[k] = v
 
     return (x.private_ip_address for x in aws_hosts_iter(boto_filters))
