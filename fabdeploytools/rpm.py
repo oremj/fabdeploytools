@@ -49,7 +49,7 @@ class RPMBuild:
 
         self.s3_bucket = s3_bucket
         if s3_bucket:
-            self.s3_root = "/packages/%s/%s" % (cluster, domain)
+            self.s3_root = "packages/%s/%s" % (cluster, domain)
 
         if cluster and domain and http_root:
             self.http_root = os.path.join(http_root, cluster, domain)
