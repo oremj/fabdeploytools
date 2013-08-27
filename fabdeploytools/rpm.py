@@ -52,6 +52,7 @@ class RPMBuild:
             self.s3_root = "packages/%s/%s" % (cluster, domain)
 
         if cluster and domain and http_root:
+            self.http_cluster_root = os.path.join(http_root, cluster)
             self.http_root = os.path.join(http_root, cluster, domain)
         else:
             self.http_root = http_root
@@ -197,3 +198,7 @@ class RPMBuild:
             rpms.sort()
             for r in rpms[:-self.keep_http]:
                 os.unlink(r)
+
+        with lcd(self.http_cluster_root):
+            if os.path.isfile('/usr/bin/createrepo'):
+                local('createrepo .')
