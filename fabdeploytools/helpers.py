@@ -92,7 +92,7 @@ def get_app_dirs(fabfile):
     return ROOT, APP
 
 
-def deploy(name, env, cluster, domain, root, app_dir=None,
+def deploy(name, env, cluster, domain, root, app_dir=None, s3_bucket=None,
            use_sudo=False, deploy_roles='web', package_dirs=None):
     """
     root: package root, e.g., '/data/www/www.test.com'
@@ -107,7 +107,7 @@ def deploy(name, env, cluster, domain, root, app_dir=None,
         package_dirs = [app_dir]
 
     r = RPMBuild(name=name, env=env, cluster=cluster, domain=domain,
-                 use_sudo=use_sudo,
+                 use_sudo=use_sudo, s3_bucket=s3_bucket,
                  ref=git_ref(os.path.join(root, app_dir)))
     r.build_rpm(root, package_dirs)
     r.deploy(deploy_roles)
