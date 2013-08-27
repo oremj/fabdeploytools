@@ -162,8 +162,8 @@ class RPMBuild:
         k = bucket.get_key(latest)
         if k:
             k.copy(bucket.name, previous)
-        for k in (package, latest):
-            k = bucket.new_key(package)
+        for loc in (package, latest):
+            k = bucket.new_key(loc)
             k.set_contents_from_filename(rpm, replace=True)
 
     def update_package_server(self, rpm=None):
