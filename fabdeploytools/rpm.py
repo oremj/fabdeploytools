@@ -79,6 +79,7 @@ class RPMBuild:
         after_install.close()
 
         local('fpm -s dir -t rpm -n "{0.package_name}" '
+              '--provides moz-deploy-app '
               '--rpm-compression none '
               '-p "{0.package_filename}" '
               '-v "{0.build_id}" '
