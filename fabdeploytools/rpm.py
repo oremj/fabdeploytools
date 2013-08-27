@@ -201,4 +201,4 @@ class RPMBuild:
 
         with lcd(self.http_cluster_root):
             if os.path.isfile('/usr/bin/createrepo'):
-                local('createrepo .')
+                local('createrepo --update .')
