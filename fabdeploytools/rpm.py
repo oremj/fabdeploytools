@@ -11,7 +11,7 @@ class RPMBuild:
     DEFAULT_HTTP_ROOT = '/var/deployserver/packages'
 
     def __init__(self, name, env, ref, build_id=None, use_sudo=False,
-                 install_dir=None, cluster=None, domain=None,
+                 install_dir=None, cluster=None, domain=None, s3_bucket=None,
                  http_root=None, keep_http=4):
         """
         name: codename of project e.g. "zamboni"
@@ -46,6 +46,10 @@ class RPMBuild:
         if http_root is None:
             if os.path.isdir(RPMBuild.DEFAULT_HTTP_ROOT):  # default location
                 http_root = RPMBuild.DEFAULT_HTTP_ROOT
+
+        self.s3_bucket = s3_bucket
+        if s3_bucket:
+            self.s3_root = "/packages/%s/%s" % (cluster, domain)
 
         if cluster and domain and http_root:
             self.http_root = os.path.join(http_root, cluster, domain)
@@ -92,6 +96,9 @@ class RPMBuild:
         if self.http_root:
             self.update_package_server()
 
+        if self.s3_bucket:
+            self.update_s3_bucket()
+
     def deploy(self, *role_list):
         @task
         @roles(*role_list)
@@ -136,6 +143,28 @@ class RPMBuild:
 
     def clean(self):
         local('rm -f %s' % self.package_filename)
+
+    def update_s3_bucket(self, rpm=None):
+        from . import util
+        if not self.s3_bucket:
+            raise Exception('s3_bucket is not defined.')
+        if not rpm:
+            rpm = self.package_filename
+        if not os.path.isfile(rpm):
+            raise Exception('rpm does not exist.')
+
+        c = util.connect_to_s3()
+
+        bucket = c.get_bucket(self.s3_bucket)
+        latest = os.path.join(self.s3_root, 'LATEST')
+        previous = os.path.join(self.s3_root, 'PREVIOUS')
+        package = os.path.join(self.s3_root, os.path.basename(rpm))
+        k = bucket.get_key(latest)
+        if k:
+            k.copy(bucket.name, previous)
+        for k in (package, latest):
+            k = bucket.new_key(package)
+            k.set_contents_from_filename(rpm, replace=True)
 
     def update_package_server(self, rpm=None):
         """rpm: path to latest rpm"""

@@ -6,10 +6,8 @@ from fabric import api
 
 
 def aws_hosts_iter(filters):
-    from boto.utils import get_instance_identity
-    from boto.ec2 import connect_to_region
-    region = get_instance_identity()['document']['region']
-    c = connect_to_region(region)
+    from . import util
+    c = util.connect_to_ec2()
 
     res = c.get_all_instances(filters=filters)
     for r in res:
