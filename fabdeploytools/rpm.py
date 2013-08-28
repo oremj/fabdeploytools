@@ -119,13 +119,9 @@ class RPMBuild:
         else:
             self.install_from_rpm()
 
-    def install_from_yum(self, local=False):
-        cmd = ('yum install '
-               '{0.package_filename}-{0.build_id}'.format(self))
-        if local:
-            local(cmd)
-        else:
-            self.run(cmd)
+    def install_from_yum(self):
+        self.run('yum install '
+                 '{0.package_filename}-{0.build_id}'.format(self))
 
     def install_from_rpm(self):
         put(self.package_filename, self.package_filename)
@@ -135,11 +131,7 @@ class RPMBuild:
         self.cleanup_packages()
 
     def local_install(self):
-        if self.use_yum:
-            self.install_from_yum(local=True)
-        else:
-            local('rpm -i %s' % self.package_filename)
-            self.local_cleanup_packages()
+        local('yum -y install %s' % self.package_filename)
 
     def _clean_packages(self, installed, keep, remove):
         """remove is a function"""
@@ -148,12 +140,6 @@ class RPMBuild:
         for i in installed[:-keep]:
             if self.build_id not in i:
                 remove(i)
-
-    def local_cleanup_packages(self, keep=4):
-        installed = local('rpm -q {0}'.format(self.package_name),
-                          capture=True).split()
-        installed.sort()
-        self._clean_packages(installed, keep, lambda i: local('rpm -e %s' % i))
 
     def cleanup_packages(self, keep=4):
         installed = self.run('rpm -q {0}'.format(self.package_name)).split()
