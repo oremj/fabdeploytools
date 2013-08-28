@@ -120,7 +120,7 @@ class RPMBuild:
             self.install_from_rpm()
 
     def install_from_yum(self):
-        self.run('yum install '
+        self.run('yum -q -y install '
                  '{0.package_filename}-{0.build_id}'.format(self))
 
     def install_from_rpm(self):
@@ -131,7 +131,7 @@ class RPMBuild:
         self.cleanup_packages()
 
     def local_install(self):
-        local('yum -y install %s' % self.package_filename)
+        local('yum -q -y install %s' % self.package_filename)
 
     def _clean_packages(self, installed, keep, remove):
         """remove is a function"""
