@@ -6,7 +6,7 @@ data_files = []
 
 if os.path.isdir('/etc/bash_completion.d'):
     data_files.append(('/etc/bash_completion.d',
-                       'contrib/bash-completion/clusterrun'))
+                       ['contrib/bash-completion/clusterrun']))
 
 setup(
     name='fabdeploytools',
