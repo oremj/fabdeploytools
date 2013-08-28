@@ -5,6 +5,27 @@ import re
 from fabric import api
 
 
+def aws_hosts_iter(filters):
+    from . import util
+    c = util.connect_to_ec2()
+
+    res = c.get_all_instances(filters=filters)
+    for r in res:
+        for instance in r.instances:
+            yield instance
+
+
+def aws_hosts(filters):
+    boto_filters = {}
+    filters = filters.split(',')
+    for filter_ in filters:
+        k, v = filter_.split('=')
+        boto_filters[k] = v
+
+    return filter(None, [x.private_ip_address
+                         for x in aws_hosts_iter(boto_filters)])
+
+
 def expand_hosts(hosts):
     new_hosts = []
     for host in hosts:
@@ -31,7 +52,10 @@ def loadenv(f):
         f = os.path.join('/etc/deploytools/envs', f)
     roles = json.load(open(f))
     for role, hosts in roles.iteritems():
-        roles[role] = expand_hosts(hosts)
+        if hosts[:4] == 'aws:':
+            roles[role] = aws_hosts(hosts[4:])
+        else:
+            roles[role] = expand_hosts(hosts)
 
     api.env.roledefs = roles
     all_hosts = []

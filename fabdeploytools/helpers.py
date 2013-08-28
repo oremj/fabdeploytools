@@ -1,7 +1,9 @@
+import hashlib
 import os
 
-from fabric.api import execute, lcd, local, roles, parallel, run, task
+from fabric.api import execute, lcd, local, roles, run, task
 from .rpm import RPMBuild
+from time import sleep
 
 
 @task
@@ -32,19 +34,51 @@ def pip_install_reqs(venv, pyrepo, requirements):
 
 
 @task
-def create_venv(venv, pyrepo, requirements):
-    """venv: directory where venv should be placed"""
+def create_venv(venv, pyrepo, requirements, update_on_change=False,
+                rm_first=True):
+    """venv: directory where venv should be placed
+       update_on_change: only update venv if requirements have changed
+       rm_first: rm -rf the virtualenv first."""
+
+    md5_file = os.path.join(venv, 'MD5SUM')
+    md5sum = hashlib.md5(open(requirements).read()).hexdigest()
+    if update_on_change:
+        try:
+            f = open(md5_file)
+            if f.read() == md5sum:
+                print "Virtualenv is current"
+                return
+        except IOError:
+            pass
+
+    # only rm if venv is in the path, for safety
+    if rm_first and 'venv' in venv:
+        local('rm -rf %s' % venv)
+
     local('virtualenv --distribute --never-download %s' % venv)
     pip_install_reqs(venv, pyrepo, requirements)
+
     local('rm -f %s/lib/python2.6/no-global-site-packages.txt' % venv)
     local('{0}/bin/python /usr/bin/virtualenv '
           '--relocatable {0}'.format(venv))
+
+    with open(md5_file, 'w') as f:
+        f.write(md5sum)
 
 
 def git_ref(app):
     """app: location of app. Returns currently installed ref"""
     with lcd(app):
         return local('git rev-parse HEAD', capture=True)
+
+
+@task
+def git_latest_tag(app=os.getcwd()):
+    """app: location of app. Returns latest tag"""
+    with lcd(app):
+        local('git fetch')
+        local('git fetch -t')
+        return local('git describe --abbrev=0 --tags', capture=True)
 
 
 def get_app_dirs(fabfile):
@@ -58,8 +92,9 @@ def get_app_dirs(fabfile):
     return ROOT, APP
 
 
-def deploy(name, env, cluster, domain, root, app_dir=None,
-           use_yum=False, deploy_roles='web', package_dirs=None):
+def deploy(name, env, cluster, domain, root, app_dir=None, s3_bucket=None,
+           use_sudo=False, deploy_roles='web', package_dirs=None,
+           use_yum=False):
     """
     root: package root, e.g., '/data/www/www.test.com'
     app_dir: relative to root e.g., 'testapp', defaults to "name"
@@ -73,7 +108,8 @@ def deploy(name, env, cluster, domain, root, app_dir=None,
         package_dirs = [app_dir]
 
     r = RPMBuild(name=name, env=env, cluster=cluster, domain=domain,
-                 use_yum=use_yum, ref=git_ref(os.path.join(root, app_dir)))
+                 use_sudo=use_sudo, s3_bucket=s3_bucket, use_yum=use_yum,
+                 ref=git_ref(os.path.join(root, app_dir)))
     r.build_rpm(root, package_dirs)
     r.deploy(deploy_roles)
     r.clean()
@@ -84,9 +120,9 @@ def deploy(name, env, cluster, domain, root, app_dir=None,
 def restart_uwsgi(uwsgis, role_list='web'):
     @task
     @roles(role_list)
-    @parallel
     def restart_uwsgis():
         for u in uwsgis:
             run('kill -HUP $(supervisorctl pid uwsgi-%s)' % u)
+        sleep(2)
 
     execute(restart_uwsgis)

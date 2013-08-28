@@ -3,15 +3,15 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile
 
 from fabric.api import (execute, lcd, local, roles, run,
-                        parallel, put, task)
+                        parallel, put, sudo, task)
 
 
 class RPMBuild:
 
     DEFAULT_HTTP_ROOT = '/var/deployserver/packages'
 
-    def __init__(self, name, env, ref, build_id=None,
-                 install_dir=None, cluster=None, domain=None,
+    def __init__(self, name, env, ref, build_id=None, use_sudo=False,
+                 install_dir=None, cluster=None, domain=None, s3_bucket=None,
                  http_root=None, keep_http=4, use_yum=False):
         """
         name: codename of project e.g. "zamboni"
@@ -29,6 +29,7 @@ class RPMBuild:
         self.env = env
         self.keep_http = keep_http
         self.use_yum = use_yum
+        self.run = sudo if use_sudo else run
 
         if build_id is None:
             build_id = datetime.now().strftime('%Y%m%d%H%M%S')
@@ -47,7 +48,12 @@ class RPMBuild:
             if os.path.isdir(RPMBuild.DEFAULT_HTTP_ROOT):  # default location
                 http_root = RPMBuild.DEFAULT_HTTP_ROOT
 
+        self.s3_bucket = s3_bucket
+        if s3_bucket:
+            self.s3_root = "packages/%s/%s" % (cluster, domain)
+
         if cluster and domain and http_root:
+            self.http_cluster_root = os.path.join(http_root, cluster)
             self.http_root = os.path.join(http_root, cluster, domain)
         else:
             self.http_root = http_root
@@ -74,6 +80,7 @@ class RPMBuild:
         after_install.close()
 
         local('fpm -s dir -t rpm -n "{0.package_name}" '
+              '--provides moz-deploy-app '
               '--rpm-compression none '
               '-p "{0.package_filename}" '
               '-v "{0.build_id}" '
@@ -91,6 +98,9 @@ class RPMBuild:
 
         if self.http_root:
             self.update_package_server()
+
+        if self.s3_bucket:
+            self.update_s3_bucket()
 
     def deploy(self, *role_list):
         @task
@@ -115,8 +125,8 @@ class RPMBuild:
 
     def install_from_rpm(self):
         put(self.package_filename, self.package_filename)
-        run('rpm -i %s' % self.package_filename)
-        run('rm -f %s' % self.package_filename)
+        self.run('rpm -i %s' % self.package_filename)
+        self.run('rm -f %s' % self.package_filename)
 
         self.cleanup_packages()
 
@@ -139,11 +149,34 @@ class RPMBuild:
         self._clean_packages(installed, keep, lambda i: local('rpm -e %s' % i))
 
     def cleanup_packages(self, keep=4):
-        installed = run('rpm -q {0}'.format(self.package_name)).split()
-        self._clean_packages(installed, keep, lambda i: run('rpm -e %s' % i))
+        installed = self.run('rpm -q {0}'.format(self.package_name)).split()
+        self._clean_packages(installed, keep,
+                             lambda i: self.run('rpm -e %s' % i))
 
     def clean(self):
         local('rm -f %s' % self.package_filename)
+
+    def update_s3_bucket(self, rpm=None):
+        from . import util
+        if not self.s3_bucket:
+            raise Exception('s3_bucket is not defined.')
+        if not rpm:
+            rpm = self.package_filename
+        if not os.path.isfile(rpm):
+            raise Exception('rpm does not exist.')
+
+        c = util.connect_to_s3()
+
+        bucket = c.get_bucket(self.s3_bucket)
+        latest = os.path.join(self.s3_root, 'LATEST')
+        previous = os.path.join(self.s3_root, 'PREVIOUS')
+        package = os.path.join(self.s3_root, os.path.basename(rpm))
+        k = bucket.get_key(latest)
+        if k:
+            k.copy(bucket.name, previous)
+        for loc in (package, latest):
+            k = bucket.new_key(loc)
+            k.set_contents_from_filename(rpm, replace=True)
 
     def update_package_server(self, rpm=None):
         """rpm: path to latest rpm"""
@@ -176,3 +209,7 @@ class RPMBuild:
             rpms.sort()
             for r in rpms[:-self.keep_http]:
                 os.unlink(r)
+
+        with lcd(self.http_cluster_root):
+            if os.path.isfile('/usr/bin/createrepo'):
+                local('createrepo --update .')

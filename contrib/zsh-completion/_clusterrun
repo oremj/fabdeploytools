@@ -1,0 +1,12 @@
+_clusterrun() {
+    if (( CURRENT == 2 )); then 
+        _arguments \
+        "1: :($(clusterrun -L | awk '{ print $1 }' | sed -e 's/:$//g'))"
+        return
+    elif (( CURRENT == 3)); then
+        _arguments \
+        "2: :($(clusterrun -l ${words[CURRENT-1]} | awk '{ print $1 }' | sed -e 's/:$//g'))"
+    fi
+}
+
+compdef _clusterrun clusterrun
