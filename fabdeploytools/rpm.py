@@ -12,7 +12,7 @@ class RPMBuild:
 
     def __init__(self, name, env, ref, build_id=None,
                  install_dir=None, cluster=None, domain=None,
-                 http_root=None, keep_http=4):
+                 http_root=None, keep_http=4, use_yum=False):
         """
         name: codename of project e.g. "zamboni"
         env: prod, stage, dev, etc
@@ -28,6 +28,7 @@ class RPMBuild:
         self.name = name
         self.env = env
         self.keep_http = keep_http
+        self.use_yum = use_yum
 
         if build_id is None:
             build_id = datetime.now().strftime('%Y%m%d%H%M%S')
@@ -103,7 +104,16 @@ class RPMBuild:
 
     def install_package(self):
         """installs package on remote hosts. roles or hosts must be set"""
+        if self.use_yum:
+            self.install_from_yum()
+        else:
+            self.install_from_rpm()
 
+    def install_from_yum(self):
+        run('yum install '
+            '{0.package_filename}-{0.build_id}'.format(self))
+
+    def install_from_rpm(self):
         put(self.package_filename, self.package_filename)
         run('rpm -i %s' % self.package_filename)
         run('rm -f %s' % self.package_filename)
