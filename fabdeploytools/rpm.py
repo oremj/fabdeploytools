@@ -121,7 +121,7 @@ class RPMBuild:
 
     def install_from_yum(self):
         self.run('yum -q -y install '
-                 '{0.package_filename}-{0.build_id}'.format(self))
+                 '{0.package_name}-{0.build_id}'.format(self))
 
     def install_from_rpm(self):
         put(self.package_filename, self.package_filename)
