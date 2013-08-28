@@ -3,6 +3,7 @@ import os
 
 from fabric.api import execute, lcd, local, roles, run, task
 from .rpm import RPMBuild
+from . import config
 from time import sleep
 
 
@@ -94,7 +95,7 @@ def get_app_dirs(fabfile):
 
 def deploy(name, env, cluster, domain, root, app_dir=None, s3_bucket=None,
            use_sudo=False, deploy_roles='web', package_dirs=None,
-           use_yum=False):
+           use_yum=config.use_yum):
     """
     root: package root, e.g., '/data/www/www.test.com'
     app_dir: relative to root e.g., 'testapp', defaults to "name"
