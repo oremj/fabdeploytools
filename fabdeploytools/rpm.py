@@ -208,5 +208,5 @@ class RPMBuild:
                 lock_file = '/var/tmp/createrepo'
                 lock_timeout = '10'
                 local('flock -x -w {0} {1} -c '
-                      'createrepo -q --update .'.format(lock_timeout,
-                                                        lock_file))
+                      '"createrepo -q --update ."'.format(lock_timeout,
+                                                          lock_file))
