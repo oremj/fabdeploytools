@@ -48,9 +48,8 @@ if args.listhosttypes:
 
 if args.listhosts:
     for hosttype in args.hosttype.split(','):
-        for hostlist in env.roledefs.get(hosttype, []):
-            for host in hostlist:
-                print host
+        for host in env.roledefs.get(hosttype, []):
+            print host
     sys.exit()
 
 execute_cmd(args.cmd, args.poolsize, args.hosttype.split(','))
