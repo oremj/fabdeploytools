@@ -205,4 +205,8 @@ class RPMBuild:
 
         with lcd(self.http_cluster_root):
             if os.path.isfile('/usr/bin/createrepo'):
-                local('createrepo -q --update .')
+                lock_file = '/var/tmp/createrepo'
+                lock_timeout = '10'
+                local('flock -x -w {0} {1} -c '
+                      'createrepo -q --update .'.format(lock_timeout,
+                                                        lock_file))
