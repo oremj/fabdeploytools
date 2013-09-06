@@ -23,6 +23,7 @@ parser = argparse.ArgumentParser(description='Run commands on a host group')
 parser.add_argument('-p', '--poolsize', default=30, type=int)
 parser.add_argument('-l', '--listhosttypes', action='store_true')
 parser.add_argument('-L', '--listenvs', action='store_true')
+parser.add_argument('--listhosts', action='store_true')
 parser.add_argument('-u', '--user', default=getpass.getuser())
 parser.add_argument('env', nargs='?')
 parser.add_argument('hosttype', nargs='?')
@@ -36,13 +37,20 @@ env.user = args.user
 if args.listenvs:
     for f in os.listdir('/etc/deploytools/envs'):
         envs.loadenv(f)
-        print "%s: %s" % (f, ', '.join(env.roledefs.keys()))
+        print "%s: %s" % (f, ' '.join(env.roledefs.keys()))
     sys.exit()
 
 envs.loadenv(args.env)
 if args.listhosttypes:
     for k, v in env.roledefs.iteritems():
-        print "%s: %s" % (k, ','.join(v))
+        print "%s: %s" % (k, ' '.join(v))
+    sys.exit()
+
+if args.listhosts:
+    for hosttype in args.hosttype.split(','):
+        for hostlist in env.roledefs.get(hosttype, []):
+            for host in hostlist:
+                print host
     sys.exit()
 
 execute_cmd(args.cmd, args.poolsize, args.hosttype.split(','))
