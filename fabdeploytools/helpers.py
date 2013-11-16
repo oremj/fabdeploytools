@@ -127,3 +127,18 @@ def restart_uwsgi(uwsgis, role_list='web'):
         sleep(2)
 
     execute(restart_uwsgis)
+
+
+def scl_enable(name):
+    def prepend_env(envname, new):
+        if os.environ.get(envname):
+            new = ":".join([new, os.environ[envname]])
+        os.environ[envname] = new
+
+    prepend_env('PATH', os.path.join('/opt/rh', name, 'root/usr/bin'))
+    prepend_env('LD_LIBRARY_PATH',
+                os.path.join('/opt/rh', name, 'root/usr/lib64'))
+    prepend_env('XDG_DATA_DIRS',
+                os.path.join('/opt/rh/', name, 'root/usr/share'))
+    prepend_env('PKG_CONFIG_PATH',
+                os.path.join('/opt/rh/', name, 'root/usr/lib64/pkgconfig'))
