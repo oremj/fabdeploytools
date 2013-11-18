@@ -33,6 +33,10 @@ def pip_install_reqs(venv, pyrepo, requirements):
           '--download-cache=/tmp/pip-cache -f %s '
           '-r %s' % (venv, pyrepo, requirements))
 
+    local('%s/bin/pip install --exists-action=w --no-deps --no-index '
+          '--download-cache=/tmp/pip-cache -f %s '
+          'virtualenv' % (venv, pyrepo))
+
 
 @task
 def create_venv(venv, pyrepo, requirements, update_on_change=False,
@@ -60,7 +64,7 @@ def create_venv(venv, pyrepo, requirements, update_on_change=False,
     pip_install_reqs(venv, pyrepo, requirements)
 
     local('rm -f %s/lib/python2.6/no-global-site-packages.txt' % venv)
-    local('{0}/bin/python /usr/bin/virtualenv '
+    local('{0}/bin/python {0}/bin/virtualenv '
           '--relocatable {0}'.format(venv))
 
     with open(md5_file, 'w') as f:
