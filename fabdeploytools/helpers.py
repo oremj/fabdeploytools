@@ -63,7 +63,7 @@ def create_venv(venv, pyrepo, requirements, update_on_change=False,
     local('virtualenv --python=python --distribute --never-download %s' % venv)
     pip_install_reqs(venv, pyrepo, requirements)
 
-    local('rm -f %s/lib/python2.6/no-global-site-packages.txt' % venv)
+    local('rm -f %s/lib/python2.{6,7}/no-global-site-packages.txt' % venv)
     local('{0}/bin/python {0}/bin/virtualenv '
           '--relocatable {0}'.format(venv))
 
