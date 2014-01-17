@@ -12,7 +12,8 @@ class RPMBuild:
 
     def __init__(self, name, env, ref, build_id=None, use_sudo=False,
                  install_dir=None, cluster=None, domain=None, s3_bucket=None,
-                 http_root=None, keep_http=4, use_yum=False):
+                 http_root=None, keep_http=4, use_yum=False,
+                 yum_repo='deploytools'):
         """
         name: codename of project e.g. "zamboni"
         env: prod, stage, dev, etc
@@ -29,6 +30,7 @@ class RPMBuild:
         self.env = env
         self.keep_http = keep_http
         self.use_yum = use_yum
+        self.yum_repo = yum_repo
         self.run = sudo if use_sudo else run
 
         if build_id is None:
@@ -120,7 +122,8 @@ class RPMBuild:
             self.install_from_rpm()
 
     def install_from_yum(self):
-        self.run('yum -q -y install '
+        self.run('yum -q -y '
+                 '--disablerepo=* --enablerepo=self.yum_repo install '
                  '{0.package_name}-{0.build_id}'.format(self))
 
     def install_from_rpm(self):
