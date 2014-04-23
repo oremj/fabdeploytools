@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from tempfile import NamedTemporaryFile
+from hashlib import md5
 
 from fabric.api import (execute, lcd, local, roles, run,
                         parallel, put, sudo, task)
@@ -123,7 +124,7 @@ class RPMBuild:
 
     def install_from_yum(self):
         self.run('yum -q -y '
-                 '--disablerepo=* --enablerepo=self.yum_repo install '
+                 '--disablerepo=* --enablerepo={0.yum_repo} install '
                  '{0.package_name}-{0.build_id}'.format(self))
 
     def install_from_rpm(self):
@@ -209,9 +210,13 @@ class RPMBuild:
         with lcd(self.http_cluster_root):
             if os.path.isfile('/usr/bin/createrepo'):
                 lock_file = '/var/tmp/createrepo'
-                lock_timeout = '60'
+                lock_timeout = '240'
+                md5sum = md5(self.http_cluster_root).hexdigest()
+                cache_dir = '/dev/shm/{0}'.format(md5sum)
                 createrepo_workers = '8'
                 local('flock -x -w {0} {1} -c '
                       '"createrepo -q --workers={2} '
-                      '--update ."'.format(lock_timeout, lock_file,
-                                           createrepo_workers))
+                      '--cachedir={3} '
+                      '--skip-stat ."'.format(lock_timeout, lock_file,
+                                              createrepo_workers,
+                                              cache_dir))
