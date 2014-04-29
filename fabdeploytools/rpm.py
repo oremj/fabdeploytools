@@ -124,6 +124,7 @@ class RPMBuild:
 
     def install_from_yum(self):
         self.run('yum -q -y '
+                 '--disableplugin=rhnplugin '
                  '--disablerepo=* --enablerepo={0.yum_repo} install '
                  '{0.package_name}-{0.build_id}'.format(self))
 
