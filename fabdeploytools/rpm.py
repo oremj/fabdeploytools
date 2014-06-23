@@ -136,7 +136,8 @@ class RPMBuild:
         self.cleanup_packages()
 
     def local_install(self):
-        local('yum -q -y install %s' % self.package_filename)
+        local('yum -q -y --disableplugin=rhnplugin '
+              'install %s' % self.package_filename)
 
     def _clean_packages(self, installed, keep, remove):
         """remove is a function"""
