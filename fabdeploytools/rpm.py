@@ -211,10 +211,10 @@ class RPMBuild:
 
         with lcd(self.http_cluster_root):
             if os.path.isfile('/usr/bin/createrepo'):
-                lock_file = '/var/tmp/createrepo'
-                lock_timeout = '240'
+                lock_timeout = '300'
                 md5sum = md5(self.http_cluster_root).hexdigest()
                 cache_dir = '/dev/shm/{0}'.format(md5sum)
+                lock_file = '/var/tmp/{0}'.format(md5sum)
                 createrepo_workers = '8'
                 local('flock -x -w {0} {1} -c '
                       '"createrepo -q --workers={2} '
