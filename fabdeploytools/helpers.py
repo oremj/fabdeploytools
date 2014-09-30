@@ -116,7 +116,10 @@ def deploy(name, env, cluster, domain, root, app_dir=None, s3_bucket=None,
                  use_sudo=use_sudo, s3_bucket=s3_bucket, use_yum=use_yum,
                  ref=git_ref(os.path.join(root, app_dir)))
     r.build_rpm(root, package_dirs)
-    if deploy_roles:
+
+    if deploy_roles == 'local':
+        r.local_install()
+    else:
         r.deploy(deploy_roles)
     r.clean()
 
