@@ -14,7 +14,7 @@ class RPMBuild:
     def __init__(self, name, env, ref, build_id=None, use_sudo=False,
                  install_dir=None, cluster=None, domain=None, s3_bucket=None,
                  http_root=None, keep_http=4, use_yum=False,
-                 yum_repo='deploytools'):
+                 yum_repo='deploytools', package_filename=None):
         """
         name: codename of project e.g. "zamboni"
         env: prod, stage, dev, etc
@@ -63,8 +63,12 @@ class RPMBuild:
 
         self.package_name = 'deploy-%s-%s' % (self.name, self.env)
         full_name = 'deploy-{0.name}-{0.env}-{0.build_id}-{0.ref}'.format(self)
-        self.package_filename = os.path.join('/tmp',
-                                             '%s.rpm' % full_name)
+
+        if package_filename:
+            self.package_filename = package_filename
+        else:
+            self.package_filename = os.path.join('/tmp',
+                                                 '%s.rpm' % full_name)
 
         self.install_to = os.path.join(self.install_dir, full_name)
 
@@ -105,15 +109,17 @@ class RPMBuild:
         if self.s3_bucket:
             self.update_s3_bucket()
 
-    def deploy(self, *role_list):
+    def remote_install(self, role_list):
         @task
         @roles(*role_list)
         @parallel
         def install():
             self.install_package()
-
-        self.local_install()
         execute(install)
+
+    def deploy(self, *role_list):
+        self.local_install()
+        self.remote_install(role_list)
 
     def install_package(self):
         """installs package on remote hosts. roles or hosts must be set"""
