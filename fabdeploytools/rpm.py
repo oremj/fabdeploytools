@@ -109,15 +109,17 @@ class RPMBuild:
         if self.s3_bucket:
             self.update_s3_bucket()
 
-    def deploy(self, *role_list):
+    def remote_install(self, role_list):
         @task
         @roles(*role_list)
         @parallel
         def install():
             self.install_package()
-
-        self.local_install()
         execute(install)
+
+    def deploy(self, *role_list):
+        self.local_install()
+        self.remote_install(role_list)
 
     def install_package(self):
         """installs package on remote hosts. roles or hosts must be set"""
