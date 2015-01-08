@@ -1,7 +1,8 @@
 import hashlib
 import os
 
-from fabric.api import execute, lcd, local, roles, run, task
+from fabric.api import (execute, lcd, local, parallel,
+                        put, roles, run, sudo, task)
 from .rpm import RPMBuild
 from . import config
 from time import sleep
@@ -95,6 +96,55 @@ def get_app_dirs(fabfile):
     APP = os.path.dirname(os.path.abspath(fabfile))
     ROOT = os.path.dirname(APP)
     return ROOT, APP
+
+
+def build_rpm(name, env, cluster, domain, root, app_dir=None, s3_bucket=None,
+              use_sudo=False, package_dirs=None):
+
+    if app_dir is None:
+        app_dir = name
+
+    if package_dirs is None:
+        package_dirs = [app_dir]
+
+    r = RPMBuild(name=name, env=env, cluster=cluster, domain=domain,
+                 use_sudo=use_sudo, s3_bucket=s3_bucket,
+                 ref=git_ref(os.path.join(root, app_dir)))
+    r.build_rpm(root, package_dirs)
+
+    return r
+
+
+def local_install(rpm_file):
+    local('yum -q -y --disableplugin=rhnplugin install "%s"' % rpm_file)
+
+
+def deploy_from_file(rpm_file, deploy_roles=None, use_sudo=False,
+                     use_yum=config.use_yum):
+    _run = sudo if use_sudo else run
+
+    if deploy_roles is None:
+        deploy_roles = ['web']
+
+    rpm_name_version = local('rpm -q %s' % rpm_file, capture=True)
+
+    @task
+    @roles(*deploy_roles)
+    @parallel
+    def install():
+        if use_yum:
+            _run('yum -q -y '
+                 '--disableplugin=rhnplugin '
+                 '--disablerepo=* --enablerepo=deploytools install '
+                 '{0}'.format(rpm_name_version))
+        else:
+            remote_rpm_file = os.path.join('/tmp', os.path.basename(rpm_file))
+            put(rpm_file, remote_rpm_file)
+            _run('yum -q -y --disableplugin=rhnplugin '
+                 'install "%s"' % remote_rpm_file)
+            _run('rm -f %s', remote_rpm_file)
+
+    execute(install)
 
 
 def deploy(name, env, cluster, domain, root, app_dir=None, s3_bucket=None,
