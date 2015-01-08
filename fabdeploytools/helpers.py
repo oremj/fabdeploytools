@@ -99,7 +99,7 @@ def get_app_dirs(fabfile):
 
 
 def build_rpm(name, env, cluster, domain, root, app_dir=None, s3_bucket=None,
-              use_sudo=False, package_dirs=None):
+              use_sudo=False, package_dirs=None, package_filename=None):
 
     if app_dir is None:
         app_dir = name
@@ -109,7 +109,8 @@ def build_rpm(name, env, cluster, domain, root, app_dir=None, s3_bucket=None,
 
     r = RPMBuild(name=name, env=env, cluster=cluster, domain=domain,
                  use_sudo=use_sudo, s3_bucket=s3_bucket,
-                 ref=git_ref(os.path.join(root, app_dir)))
+                 ref=git_ref(os.path.join(root, app_dir)),
+                 package_filename=package_filename)
     r.build_rpm(root, package_dirs)
 
     return r
