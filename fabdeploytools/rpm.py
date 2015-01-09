@@ -136,7 +136,9 @@ class RPMBuild:
 
     def install_from_rpm(self):
         put(self.package_filename, self.package_filename)
-        self.run('rpm -i %s' % self.package_filename)
+        self.run('yum -q -y '
+                 '--disableplugin=rhnplugin '
+                 'install %s' % self.package_filename)
         self.run('rm -f %s' % self.package_filename)
 
         self.cleanup_packages()
