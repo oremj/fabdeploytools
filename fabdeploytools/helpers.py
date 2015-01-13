@@ -31,12 +31,12 @@ def git_info(src_dir):
 @task
 def pip_install_reqs(venv, pyrepo, requirements):
     local('%s/bin/pip install --exists-action=w --no-deps --no-index '
-          '--download-cache=/tmp/pip-cache -f %s '
-          '-r %s' % (venv, pyrepo, requirements))
+          '--download-cache=%s -f %s '
+          '-r %s' % (venv, config.pip_cache, pyrepo, requirements))
 
     local('%s/bin/pip install --exists-action=w --no-deps --no-index '
-          '--download-cache=/tmp/pip-cache -f %s '
-          'virtualenv' % (venv, pyrepo))
+          '--download-cache=%s -f %s '
+          'virtualenv' % (venv, config.pip_cache, pyrepo))
 
 
 @task

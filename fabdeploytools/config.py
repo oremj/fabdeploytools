@@ -1,4 +1,5 @@
 import functools
+import os
 from ConfigParser import SafeConfigParser
 
 
@@ -16,3 +17,5 @@ get_bool = functools.partial(get_opt, getter=config.getboolean,
                              default=False)
 
 use_yum = get_bool('global', 'use_yum')
+
+pip_cache = os.getenv('FABDEPLOYTOOLS_PIP_CACHE', '/tmp/pip-cache')

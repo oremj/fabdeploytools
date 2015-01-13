@@ -10,7 +10,7 @@ if os.path.isdir('/etc/bash_completion.d'):
 
 setup(
     name='fabdeploytools',
-    version='0.0.4',
+    version='0.0.6',
     description='Deploy tools for fabric',
     author='Jeremy Orem',
     author_email='oremj@mozilla.com',
